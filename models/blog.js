@@ -15,6 +15,7 @@ const BlogSchema = new Schema({
   comments: [{ type: Schema.Types.ObjectId, required: true, ref: "Comment" }],
 })
 
+// Blog url
 BlogSchema.virtual('url').get(() => `/blogs/${this._id}`);
 
 module.exports = mongoose.model('Blog', BlogSchema);

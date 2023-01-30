@@ -1,4 +1,5 @@
 const Author = require('../models/author')
+const Blog = require('../models/blog')
 const bcrypt = require('bcrypt')
 const { body, validationResult } = require('express-validator')
 
@@ -40,3 +41,18 @@ exports.AUTHOR_CREATE = [
     res.json(author);
   } 
 ]
+
+// Display the author's detail
+exports.AUTHOR_DETAIL = async (req, res) => {
+  const author = await Author
+    .findById(req.params.authorId, { passwordHash: 0, _id: 0 })
+    .populate('blogs')
+
+  console.log(author);
+  
+  if (!author) {
+    res.status(404).json({ error: `Author not found` });
+  }
+
+  res.json(author);
+}

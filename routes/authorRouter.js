@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
-// POST request for creating an Author
-router.post('/', (req, res) => res.json('ROUTE NOT IMPLEMENTED: AUTHOR_CREATE'))
+const authorController = require('../controllers/authorController');
 
 // GET request for a specific Author
 router.get('/:authorId', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: AUTHOR_DETAIL ${req.params.authorId}`))

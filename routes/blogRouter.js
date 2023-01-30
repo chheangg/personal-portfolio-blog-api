@@ -10,7 +10,7 @@ router.post('/', (req, res) => res.json('ROUTE NOT IMPLEMENTED: BLOG_CREATE'))
 // GET request for a specific blog
 router.get('/:blogId', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: BLOG_DETAIL ${req.params.blogId}`))
 
-// POST request for editing a blog
+// PUT request for editing a blog
 router.put('/:blogId', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: BLOG_EDIT ${req.params.blogId}`))
 
 // DELETE request for editing a blog

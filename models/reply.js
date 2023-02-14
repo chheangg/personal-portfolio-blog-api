@@ -9,4 +9,7 @@ const ReplySchema = new Schema({
   content: { type: String, required: true, maxLength: 256 },
 })
 
+// Reply id
+ReplySchema.virtual('id').get(() => this._id)
+
 module.exports = mongoose.model('Reply', ReplySchema)

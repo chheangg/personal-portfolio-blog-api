@@ -10,4 +10,7 @@ const CommentSchema = new Schema({
   replies: [{ type: Schema.Types.ObjectId, required: true, ref: 'Reply' }],
 });
 
+// Comment id
+CommentSchema.virtual('id').get(() => this._id)
+
 module.exports = mongoose.model('Comment', CommentSchema);

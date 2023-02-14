@@ -1,32 +1,33 @@
 const express = require('express');
 const router = express.Router();
+const blogController = require('../controllers/blogController')
 
 // GET request for all blogs
-router.get('/', (req, res) => res.json('ROUTE NOT IMPLEMENTED: BLOG_LIST'))
+router.get('/', blogController.BLOG_LIST)
 
 // POST request for creating a blog
-router.post('/', (req, res) => res.json('ROUTE NOT IMPLEMENTED: BLOG_CREATE'))
+router.post('/', blogController.BLOG_CREATE)
 
 // GET request for a specific blog
-router.get('/:blogId', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: BLOG_DETAIL ${req.params.blogId}`))
+router.get('/:blogId', blogController.BLOG_DETAIL)
 
 // PUT request for editing a blog
-router.put('/:blogId', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: BLOG_EDIT ${req.params.blogId}`))
+router.put('/:blogId', blogController.BLOG_EDIT)
 
 // DELETE request for editing a blog
-router.delete('/:blogId', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: BLOG_DELETE ${req.params.blogId}`))
+router.delete('/:blogId', blogController.BLOG_DELETE)
 
 // GET request for a blog's comments
-router.get('/:blogId/comments/', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: COMMENT_LIST ${req.params.blogId}`))
+router.get('/:blogId/comments/', blogController.COMMENT_LIST)
 
 // POST request for a creating a blog
-router.post('/:blogId/comments/', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: COMMENT_CREATE ${req.params.blogId}`))
+router.post('/:blogId/comments/', blogController.COMMENT_CREATE)
 
 // GET request for a comment's replies
-router.get('/:blogId/comments/:commentId/replies', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: REPLY_LIST ${req.params.blogId} / ${req.params.commentId}`))
+router.get('/:blogId/comments/:commentId/replies', blogController.REPLY_LIST)
 
 // POST request for a creating a reply
-router.post('/:blogId/comments/:commentId/replies', (req, res) => res.json(`ROUTE NOT IMPLEMENTED: REPLY_CREATE ${req.params.blogId} / ${req.params.commentId}`))
+router.post('/:blogId/comments/:commentId/replies', blogController.REPLY_CREATE)
 
 
 module.exports = router;

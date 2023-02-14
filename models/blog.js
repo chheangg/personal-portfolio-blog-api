@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Comment = require('./comment')
 const Schema = mongoose.Schema;
 
 const BlogSchema = new Schema({
@@ -9,7 +10,7 @@ const BlogSchema = new Schema({
   timestamp: { type: Date, default: Date.now },
   sections: [
     {
-      type: { type: String, enum: ['Header1', 'Header2', 'Paragraph', 'Image', 'Code'], required: true },
+      type: { type: String, enum: ['Header',     'Paragraph', 'Image', 'Code'], required: true },
       content: { type: String, required: true },
     }
   ],

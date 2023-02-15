@@ -6,7 +6,7 @@ const BlogSchema = new Schema({
   title: { type: String, required: true, minLength: [3, "title is too short" ], maxLength: [64, "title is too long"] },
   caption: {type: String, required: true, minLength: [5, "caption is too short"] , maxLength: [256, "caption is too long"]},
   author: { type: Schema.Types.ObjectId, required: true, ref: "Author" },
-  topic: [{ type: Schema.Types.ObjectId, required: true, ref: "Topic" }],
+  topics: [{ type: Schema.Types.ObjectId, required: true, ref: "Topic" }],
   timestamp: { type: Date, default: Date.now },
   sections: [
     {

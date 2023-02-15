@@ -8,14 +8,14 @@ const TopicSchema = new Schema({
 });
 
 // Topic url
-TopicSchema.virtual('url').get(() => `/topics/${this._id}`);
+TopicSchema.virtual('url').get(() => `/api/topics/${this._id}`);
 
 // Topic id
 TopicSchema.virtual('id').get(() => this._id)
 
 // Ensure virtual fields are serialised.
 TopicSchema.set('toJSON', {
-  virtual: true
-})
+  virtuals: true
+});
 
 module.exports = mongoose.model('Topic', TopicSchema);

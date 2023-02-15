@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const AuthorSchema = new Schema({
   username: { type: String, required: true },
   name: { type: String, required: true },
-  passwordHash: { type: String, required: true },
+  passwordHash: { type: String, required: true, select: false },
   blogs: [{ type: Schema.Types.ObjectId, ref: 'Blog' }],
 })
 
@@ -16,7 +16,7 @@ AuthorSchema.virtual('id').get(() => this._id);
 
 // Ensure virtual fields are serialised.
 AuthorSchema.set('toJSON', {
-  virtual: true
+  virtuals: true
 })
 
 module.exports = mongoose.model('Author', AuthorSchema)

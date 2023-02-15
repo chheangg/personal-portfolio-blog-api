@@ -14,7 +14,7 @@ ReplySchema.virtual('id').get(() => this._id)
 
 // Ensure virtual fields are serialised.
 ReplySchema.set('toJSON', {
-  virtual: true
+  virtuals: true
 })
 
 module.exports = mongoose.model('Reply', ReplySchema)

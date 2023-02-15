@@ -5,8 +5,8 @@ const Author = require('../models/author')
 const Topic = require('../models/topic')
 
 exports.BLOG_LIST = async (req, res) => {
-  const blogs = await Blog.find({})
-    .populate('topics', { blogs: 0 })
+  const blogs = await Blog.find({}, { sections: 0 })
+    .populate('topics', { blogs: 0})
     .populate('author', { blogs: 0, username: 0, passwordHash: 0 })
   
   res.json({
@@ -103,8 +103,17 @@ exports.BLOG_CREATE = [
   }
 ]
 
-exports.BLOG_DETAIL = (req, res) => {
-  res.json(`ROUTE NOT IMPLEMENTED: BLOG_DETAIL ${req.params.blogId}`)
+exports.BLOG_DETAIL = async (req, res) => {
+  const blog = await Blog.findById(req.params.blogId)
+    .populate('topics', { blogs: 0})
+    .populate('author', { blogs: 0, username: 0, passwordHash: 0 })
+    
+  if (!blog) {
+    res.status(404).json({ error: `Blog ${req.params.blogId} not found` })
+  }
+  res.json({
+    blog
+  })
 }
 
 exports.BLOG_EDIT = (req, res) => {

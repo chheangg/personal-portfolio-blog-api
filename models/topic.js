@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const TopicSchema = new Schema({
-  name: { type: String },
+  name: { type: String, required: true },
   blogs: [{ type: Schema.Types.ObjectId, ref: 'Blog' }],
 });
 

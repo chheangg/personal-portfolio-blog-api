@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "build:ui": "rm -rf build && cd ../personal-portfolio && npm run build && cp -r build ../personal-portfolio-blog-api",
     "dev": "nodemon ./bin/www",
     "start": "node ./bin/www"
   },

@@ -13,4 +13,9 @@ const CommentSchema = new Schema({
 // Comment id
 CommentSchema.virtual('id').get(() => this._id)
 
+// Ensure virtual fields are serialised.
+CommentSchema.set('toJSON', {
+  virtual: true
+})
+
 module.exports = mongoose.model('Comment', CommentSchema);

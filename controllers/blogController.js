@@ -6,6 +6,8 @@ const Author = require('../models/author')
 exports.BLOG_LIST = async (req, res) => {
   const blogs = await Blog.find({})
     .populate('comments')
+  
+  console.log(blogs[0].id)
   res.json({
     blogs
   })

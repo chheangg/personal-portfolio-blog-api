@@ -23,4 +23,9 @@ BlogSchema.virtual('url').get(() => `/blogs/${this._id}`);
 // Blog id
 BlogSchema.virtual('id').get(() => this._id)
 
+// Ensure virtual fields are serialised.
+BlogSchema.set('toJSON', {
+  virtuals: true
+});
+
 module.exports = mongoose.model('Blog', BlogSchema);

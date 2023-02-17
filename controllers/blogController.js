@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator')
 const Blog = require('../models/blog')
 const Author = require('../models/author')
 const Topic = require('../models/topic')
+const Comment = require('../models/comment')
 
 // Display a list of blogs
 exports.BLOG_LIST = async (req, res) => {
@@ -117,6 +118,7 @@ exports.BLOG_CREATE = [
 exports.BLOG_DETAIL = async (req, res) => {
   const blog = await Blog.findById(req.params.blogId)
     .populate('topics', { blogs: 0})
+    .populate('comments', { blog: 0 })
     .populate('author', { blogs: 0, username: 0, passwordHash: 0 })
     
   if (!blog) {
@@ -141,15 +143,67 @@ exports.BLOG_DELETE = (req, res) => {
 
 
 // Display a list of comment of a blog
-exports.COMMENT_LIST = (req, res) => {
-  res.json(`ROUTE NOT IMPLEMENTED: COMMENT_LIST ${req.params.blogId}`)
-}
+exports.COMMENT_LIST = async (req, res) => {
+  const blog = await Blog.findById(req.params.blogId)
 
+  if (!blog) {
+    res.status(404).json({ error: `Blog ${req.params.blogId} not found` })
+  }
+
+  res.json({
+    comments: blog.comments
+  })
+}
 
 // Handle comment creation on a blog functionalities
-exports.COMMENT_CREATE = (req, res) => {
-  res.json(`ROUTE NOT IMPLEMENTED: COMMENT_CREATE ${req.params.blogId}`)
-}
+exports.COMMENT_CREATE = [
+  body('author')
+    .trim()
+    .escape(),
+  body('content')
+    .trim()
+    .escape()
+    .isLength({ min: 3 }).withMessage('Comment must be at least 3 characters long')
+    .isLength({ max: 256 }).withMessage('Comment must not be longer than 256 characters long'),
+  async (req, res) => {
+    const errors = validationResult(req)
+    
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const body = req.body
+
+    // Check if blog and author exists
+    console.log(req.params.blogId, body.author)
+
+    const blog = await Blog.findById(req.params.blogId)
+    const author = await Author.findById(body.author)
+    
+
+    if (!blog && !author) {
+      res.status(400).json({
+        error: 'Either blog or author doesn\'t exist'
+      })
+    }
+
+    const comment = new Comment({
+      blog: blog._id,
+      author: author._id,
+      content: body.content,
+      timestamp: Date.now(),
+    })
+
+    blog.comments.push(comment)
+
+    await comment.save()
+    await blog.save()
+
+    res.json({
+      comment
+    })
+  }
+]
 
 // Display a list of reply of a comment
 exports.REPLY_LIST = (req, res) => {

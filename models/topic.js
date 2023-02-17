@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const blogs = require('./comment')
 
 const { Schema } = mongoose;
 

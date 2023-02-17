@@ -4,6 +4,7 @@ const Blog = require('../models/blog')
 const Author = require('../models/author')
 const Topic = require('../models/topic')
 
+// Display a list of blogs
 exports.BLOG_LIST = async (req, res) => {
   const blogs = await Blog.find({}, { sections: 0 })
     .populate('topics', { blogs: 0})
@@ -14,12 +15,12 @@ exports.BLOG_LIST = async (req, res) => {
   })
 }
 
+// Handle blog creation functionalities
 exports.BLOG_CREATE = [
   (req, res, next) => {
     if (Array.isArray(req.body.topics)) {
       req.body.topics = typeof req.body.topics === undefined ? [] : [...req.body.topics]
     }
-
     next()
   },
   body('title')
@@ -67,13 +68,11 @@ exports.BLOG_CREATE = [
     const allTopics = await Topic.find({})
     let topics = [];
 
-
     for(const blogTopic of body.topics) {
       const topic = allTopics.find(topic => topic._id.toString() === blogTopic)
       if (!allTopics.includes(blogTopic) && !topic) {
         validTopic = false;
       }
-
       topics.push(topic)
     }
 
@@ -95,7 +94,17 @@ exports.BLOG_CREATE = [
       topics: body.topics ? body.topics : []
     })
 
+
+    // Save blog to each topic document
+    const savedTopics = topics.map(topic => {
+      topic.blogs.push(blog._id)
+      return topic
+    })
+
+    console.log(blog)
+
     await blog.save()
+    await savedTopics.forEach(async (topic) => await topic.save())
 
     res.json({
       blog
@@ -103,6 +112,8 @@ exports.BLOG_CREATE = [
   }
 ]
 
+
+// Display blog's detail
 exports.BLOG_DETAIL = async (req, res) => {
   const blog = await Blog.findById(req.params.blogId)
     .populate('topics', { blogs: 0})
@@ -116,26 +127,36 @@ exports.BLOG_DETAIL = async (req, res) => {
   })
 }
 
+
+// Handle blog editing functionalities
 exports.BLOG_EDIT = (req, res) => {
   res.json(`ROUTE NOT IMPLEMENTED: BLOG_EDIT ${req.params.blogId}`)
 }
 
+
+// Handle blog deletion functionalities
 exports.BLOG_DELETE = (req, res) => {
   res.json(`ROUTE NOT IMPLEMENTED: BLOG_DELETE ${req.params.blogId}`)
 }
 
+
+// Display a list of comment of a blog
 exports.COMMENT_LIST = (req, res) => {
   res.json(`ROUTE NOT IMPLEMENTED: COMMENT_LIST ${req.params.blogId}`)
 }
 
+
+// Handle comment creation on a blog functionalities
 exports.COMMENT_CREATE = (req, res) => {
   res.json(`ROUTE NOT IMPLEMENTED: COMMENT_CREATE ${req.params.blogId}`)
 }
 
+// Display a list of reply of a comment
 exports.REPLY_LIST = (req, res) => {
   res.json(`ROUTE NOT IMPLEMENTED: REPLY_LIST ${req.params.blogId} / ${req.params.commentId}`)
 }
 
+// Handle reply creation on a comment functionalities
 exports.REPLY_CREATE = (req, res) => {
   res.json(`ROUTE NOT IMPLEMENTED: REPLY_CREATE ${req.params.blogId} / ${req.params.commentId}`)
 }

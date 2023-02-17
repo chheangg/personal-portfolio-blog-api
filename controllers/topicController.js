@@ -26,8 +26,6 @@ exports.TOPIC_CREATE = [
       name: body.name
     })
 
-    console.log('hey')
-
     await topic.save()
 
     res.json({
@@ -36,8 +34,17 @@ exports.TOPIC_CREATE = [
   }
 ]
 
-exports.TOPIC_DETAIL = (req, res) => {
-  res.json(`ROUTE NOT IMPLEMENTED: TOPIC_DETAIL ${req.params.topicId}`)
+exports.TOPIC_DETAIL = async (req, res) => {
+  const topic = await Topic.findById(req.params.topicId)
+  if (!topic) {
+    res.status(404).json({
+      error: "Topic doesn't exist"
+    })
+    return
+  }
+  res.json(
+    topic
+  )
 }
 
 exports.TOPIC_EDIT = (req, res) => {

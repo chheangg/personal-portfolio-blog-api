@@ -47,8 +47,6 @@ exports.AUTHOR_DETAIL = async (req, res) => {
   const author = await Author
     .findById(req.params.authorId, { passwordHash: 0, _id: 0 })
     .populate('blogs')
-
-  console.log(author);
   
   if (!author) {
     res.status(404).json({ error: `Author not found` });

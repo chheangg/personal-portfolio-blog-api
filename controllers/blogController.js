@@ -102,7 +102,6 @@ exports.BLOG_CREATE = [
       return topic
     })
 
-    console.log(blog)
 
     await blog.save()
     await savedTopics.forEach(async (topic) => await topic.save())
@@ -146,6 +145,7 @@ exports.BLOG_DELETE = (req, res) => {
 exports.COMMENT_LIST = async (req, res) => {
   const blog = await Blog.findById(req.params.blogId)
     .populate('comments')
+    .populate('author')
 
   if (!blog) {
     res.status(404).json({ error: `Blog ${req.params.blogId} not found` })
@@ -159,6 +159,9 @@ exports.COMMENT_LIST = async (req, res) => {
 // Handle comment creation on a blog functionalities
 exports.COMMENT_CREATE = [
   body('author')
+    .trim()
+    .escape(),
+  body('name')
     .trim()
     .escape(),
   body('content')
@@ -175,25 +178,35 @@ exports.COMMENT_CREATE = [
 
     const body = req.body
 
-    // Check if blog and author exists
-    console.log(req.params.blogId, body.author)
-
     const blog = await Blog.findById(req.params.blogId)
-    const author = await Author.findById(body.author)
-    
 
-    if (!blog && !author) {
+    let author
+    if (body.author) {
+      author = await Author.findById(body.author)
+    }
+    
+    if (!blog || (body.author && !author)) {
       res.status(400).json({
         error: 'Either blog or author doesn\'t exist'
       })
     }
 
-    const comment = new Comment({
-      blog: blog._id,
-      author: author._id,
-      content: body.content,
-      timestamp: Date.now(),
-    })
+    let comment
+    if (body.author) {
+      comment = new Comment({
+        blog: blog._id,
+        author: author,
+        content: body.content,
+        timestamp: Date.now(),
+      })
+    } else {
+      comment = new Comment({
+        blog: blog._id,
+        name: body.name,
+        content: body.content,
+        timestamp: Date.now(),
+      })
+    }
 
     blog.comments.push(comment)
 

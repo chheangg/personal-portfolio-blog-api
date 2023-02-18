@@ -145,6 +145,7 @@ exports.BLOG_DELETE = (req, res) => {
 // Display a list of comment of a blog
 exports.COMMENT_LIST = async (req, res) => {
   const blog = await Blog.findById(req.params.blogId)
+    .populate('comments')
 
   if (!blog) {
     res.status(404).json({ error: `Blog ${req.params.blogId} not found` })

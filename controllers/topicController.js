@@ -35,7 +35,13 @@ exports.TOPIC_CREATE = [
 ]
 
 exports.TOPIC_DETAIL = async (req, res) => {
-  const topic = await Topic.findById(req.params.topicId).populate('blogs')
+  const topic = await Topic.findById(req.params.topicId)
+    .populate({
+      path: 'blogs',
+      populate: {
+        path: 'author'
+      }
+    })
   if (!topic) {
     res.status(404).json({
       error: "Topic doesn't exist"

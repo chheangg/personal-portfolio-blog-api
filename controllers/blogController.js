@@ -170,7 +170,6 @@ exports.COMMENT_CREATE = [
     .isLength({ min: 3 }).withMessage('Comment must be at least 3 characters long')
     .isLength({ max: 256 }).withMessage('Comment must not be longer than 256 characters long'),
   async (req, res) => {
-    console.log(req.body)
     const errors = validationResult(req)
     
     if (!errors.isEmpty()) {
@@ -237,6 +236,64 @@ exports.REPLY_LIST = async (req, res) => {
 }
 
 // Handle reply creation on a comment functionalities
-exports.REPLY_CREATE = (req, res) => {
-  res.json(`ROUTE NOT IMPLEMENTED: REPLY_CREATE ${req.params.blogId} / ${req.params.commentId}`)
-}
+exports.REPLY_CREATE = [
+  body('author')
+    .trim()
+    .escape(),
+  body('name')
+    .trim()
+    .escape(),
+  body('content')
+    .trim()
+    .escape()
+    .isLength({ min: 3 }).withMessage('Reply must be at least 3 characters long')
+    .isLength({ max: 256 }).withMessage('Reply must not be longer than 256 characters long'),
+  async (req, res) => {
+    const errors = validationResult(req)
+    
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const body = req.body
+
+    const comment = await Comment.findById(req.params.commentId)
+
+    let author
+    if (body.author) {
+      author = await Author.findById(body.author)
+    }
+    
+    if (!comment || (body.author && !author)) {
+      res.status(400).json({
+        error: 'Either blog or author doesn\'t exist'
+      })
+    }
+
+    let reply
+    if (body.author) {
+      reply = new Reply({
+        comment: comment._id,
+        author: author,
+        content: body.content,
+        timestamp: Date.now(),
+      })
+    } else {
+      reply = new Reply({
+        comment: comment._id,
+        name: body.name,
+        content: body.content,
+        timestamp: Date.now(),
+      })
+    }
+
+    comment.replies.push(comment)
+
+    await reply.save()
+    await comment.save()
+
+    res.json({
+      reply
+    })
+  }
+]

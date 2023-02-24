@@ -22,6 +22,13 @@ exports.TOPIC_CREATE = [
     }
 
     const body = req.body
+    const sameTopic = await Topic.findOne({ name: body.name })
+
+    if (sameTopic) {
+      return res.status(400).json({ error: "Topic already exist" })
+    }
+
+    
     const topic = new Topic({
       name: body.name
     })

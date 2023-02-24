@@ -1,4 +1,6 @@
-const { body, validationResult } = require('express-validator')
+const { body, validationResult, sanitizeCookie } = require('express-validator')
+const { parse, valid } = require('node-html-parser')
+const sanitizeHtml = require('sanitize-html');
 
 const Blog = require('../models/blog')
 const Author = require('../models/author')
@@ -40,9 +42,8 @@ exports.BLOG_CREATE = [
   body('topics.*')
     .trim()
     .escape(),
-  body('section.*')
-    .trim()
-    .escape(),
+  body('content')
+    .trim(),
   async (req, res) => {
     const errors = validationResult(req)
     
@@ -62,6 +63,7 @@ exports.BLOG_CREATE = [
             error: "User not found"
           }
         )
+      return
     }
 
     let validTopic = true;
@@ -87,12 +89,28 @@ exports.BLOG_CREATE = [
       return;
     }
 
+    // Parse HTML and check if it is valid
+    const parsedContent = parse(body.content)
+
+    if (!valid(parsedContent)) {
+      res
+        .status(400)
+        .json(
+          {
+            error: "HTML Content is not valid"
+          }
+        )
+        return
+    }
+
+    const sanitizedContent = sanitizeHtml(body.content)
+
     const blog = new Blog({
       title: body.title,
       caption: body.caption,
       author: author._id,
       timestamp: Date.now(),
-      sections: body.sections,
+      content: sanitizedContent,
       topics: body.topics ? body.topics : []
     })
 
@@ -224,6 +242,7 @@ exports.REPLY_LIST = async (req, res) => {
   const replies = await Reply.find({
     comment: req.params.commentId
   }).populate('author')
+
 
   if (!replies) {
     res.status(404).json({ error: `Blog ${req.params.blogId} not found` })

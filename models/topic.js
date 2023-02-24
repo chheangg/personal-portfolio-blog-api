@@ -4,7 +4,7 @@ const blogs = require('./comment')
 const { Schema } = mongoose;
 
 const TopicSchema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   blogs: [{ type: Schema.Types.ObjectId, ref: 'Blog' }],
 });
 

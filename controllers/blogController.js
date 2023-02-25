@@ -1,6 +1,41 @@
-const { body, validationResult, sanitizeCookie } = require('express-validator')
+const { body, validationResult } = require('express-validator')
 const { parse, valid } = require('node-html-parser')
 const sanitizeHtml = require('sanitize-html');
+const { v4: uuidv4 } = require('uuid');
+const multer  = require('multer')
+const path = require('path')
+const fs = require('fs')
+const { promisify } = require('util')
+
+const unlinkAsync = promisify(fs.unlink)
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './public/images')
+  },
+  filename: (req, file, cb) => {
+    const fileName = uuidv4() + '-' + file.originalname.toLowerCase().split(' ').join('-');
+    cb(null, fileName)
+  }
+})
+
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname);
+  if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+    cb(new Error('Only images are allowed'))
+  }
+
+  cb(null, true)
+}
+
+const upload = multer({
+  storage,
+  fileFilter: fileFilter,
+  limits: {
+    fieldNameSize: 999999999,
+    fieldSize: 999999999
+  },
+});
 
 const Blog = require('../models/blog')
 const Author = require('../models/author')
@@ -21,10 +56,9 @@ exports.BLOG_LIST = async (req, res) => {
 
 // Handle blog creation functionalities
 exports.BLOG_CREATE = [
+  upload.single('thumbnail'),
   (req, res, next) => {
-    if (Array.isArray(req.body.topics)) {
-      req.body.topics = typeof req.body.topics === undefined ? [] : [...req.body.topics]
-    }
+    req.body.topics = req.body.topics ? [...req.body.topics.split(',')] : []
     next()
   },
   body('title')
@@ -35,7 +69,7 @@ exports.BLOG_CREATE = [
   body('caption')
     .trim()
     .escape()
-    .isLength({ min: 3 }).withMessage('Caption must be at least 3 characters long')
+    .isLength({ min: 5 }).withMessage('Caption must be at least 5 characters long')
     .isLength({ max: 256 }).withMessage('Caption must not be longer than 256 characters long'),
   body('author')
     .escape(),
@@ -46,10 +80,10 @@ exports.BLOG_CREATE = [
     .trim(),
   async (req, res) => {
     const errors = validationResult(req)
-
-    console.log(req.body)
     
     if (!errors.isEmpty()) {
+      console.log(req.file)
+      await unlinkAsync(req.file.path)
       return res.status(400).json({ errors: errors.array() })
     }
 
@@ -121,16 +155,15 @@ exports.BLOG_CREATE = [
     }
 
     const sanitizedContent = sanitizeHtml(body.content)
-
     const blog = new Blog({
       title: body.title,
       caption: body.caption,
       author: author._id,
       timestamp: Date.now(),
       content: sanitizedContent,
-      topics: body.topics ? body.topics : []
+      topics: body.topics ? body.topics : [],
+      thumbnail: req.file ? req.file.path : ''
     })
-
 
     // Save blog to each topic document
     const savedTopics = topics.map(topic => {
@@ -141,7 +174,6 @@ exports.BLOG_CREATE = [
 
     await blog.save()
     await savedTopics.forEach(async (topic) => await topic.save())
-
     res.json({
       blog
     })    
@@ -208,6 +240,7 @@ exports.COMMENT_CREATE = [
     const errors = validationResult(req)
     
     if (!errors.isEmpty()) {
+      
       return res.status(400).json({ errors: errors.array() })
     }
 

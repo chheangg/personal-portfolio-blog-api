@@ -35,8 +35,8 @@ exports.BLOG_CREATE = [
   body('caption')
     .trim()
     .escape()
-    .isLength({ min: 3 }).withMessage('Title must be at least 3 characters long')
-    .isLength({ max: 256 }).withMessage('Title must not be longer than 256 characters long'),
+    .isLength({ min: 3 }).withMessage('Caption must be at least 3 characters long')
+    .isLength({ max: 256 }).withMessage('Caption must not be longer than 256 characters long'),
   body('author')
     .escape(),
   body('topics.*')
@@ -46,6 +46,8 @@ exports.BLOG_CREATE = [
     .trim(),
   async (req, res) => {
     const errors = validationResult(req)
+
+    console.log(req.body)
     
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() })
@@ -60,7 +62,12 @@ exports.BLOG_CREATE = [
         .status(400)
         .json(
           {
-            error: "User not found"
+            errors: [
+              {
+                param: 'user',
+                msg: "User not found"
+              }
+            ]
           }
         )
       return
@@ -84,7 +91,12 @@ exports.BLOG_CREATE = [
       res
         .status(400)
         .json({
-          error: "Topic not found"
+          errors: [
+            {
+              param: 'topic',
+              msg: "Some topic are invalid"
+            }
+          ]
         })
       return;
     }
@@ -97,7 +109,12 @@ exports.BLOG_CREATE = [
         .status(400)
         .json(
           {
-            error: "HTML Content is not valid"
+            errors: [
+              {
+                param: 'content',
+                msg: "Content not valid"
+              }
+            ]
           }
         )
         return

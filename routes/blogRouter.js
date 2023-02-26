@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const blogController = require('../controllers/blogController')
 
+// POST request for uploading images
+router.post('/upload', blogController.UPLOAD_IMAGE)
+
 // GET request for all blogs
 router.get('/', blogController.BLOG_LIST)
 

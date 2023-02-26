@@ -8,10 +8,13 @@ const fs = require('fs')
 const { promisify } = require('util')
 
 const unlinkAsync = promisify(fs.unlink)
+const existAsync = promisify(fs.exists)
+
+const imageDir = './public/images'
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './public/images')
+    cb(null, imageDir)
   },
   filename: (req, file, cb) => {
     const fileName = uuidv4() + '-' + file.originalname.toLowerCase().split(' ').join('-');
@@ -19,7 +22,13 @@ const storage = multer.diskStorage({
   }
 })
 
-const fileFilter = (req, file, cb) => {
+const fileFilter = async (req, file, cb) => {
+  const fileExists = await existAsync(imageDir + '/' + file.originalname.toLowerCase().split(' ').join('-'))
+
+  if (fileExists) {
+    return cb(null, false)
+  }
+
   const ext = path.extname(file.originalname);
   if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
     cb(new Error('Only images are allowed'))
@@ -190,7 +199,6 @@ exports.BLOG_CREATE = [
       enforceHtmlBoundary: false,
       parseStyleAttributes: true
     })
-    console.log(sanitizedContent)
     const blog = new Blog({
       title: body.title,
       caption: body.caption,
@@ -206,7 +214,6 @@ exports.BLOG_CREATE = [
       topic.blogs.push(blog._id)
       return topic
     })
-
 
     await blog.save()
     await savedTopics.forEach(async (topic) => await topic.save())
@@ -232,12 +239,162 @@ exports.BLOG_DETAIL = async (req, res) => {
   })
 }
 
-
 // Handle blog editing functionalities
-exports.BLOG_EDIT = (req, res) => {
-  res.json(`ROUTE NOT IMPLEMENTED: BLOG_EDIT ${req.params.blogId}`)
-}
+exports.BLOG_EDIT = [
+  upload.single('thumbnail'),
+  (req, res, next) => {
+    req.body.topics = req.body.topics ? [...req.body.topics.split(',')] : []
+    next()
+  },
+  body('title')
+    .trim()
+    .escape()
+    .isLength({ min: 3 }).withMessage('Title must be at least 3 characters long')
+    .isLength({ max: 64 }).withMessage('Title must not be longer than 64 characters long'),
+  body('caption')
+    .trim()
+    .escape()
+    .isLength({ min: 5 }).withMessage('Caption must be at least 5 characters long')
+    .isLength({ max: 256 }).withMessage('Caption must not be longer than 256 characters long'),
+  body('author')
+    .escape(),
+  body('topics.*')
+    .trim()
+    .escape(),
+  body('content')
+    .trim(),
+  async (req, res) => {
+    const errors = validationResult(req)
+    
+    if (!errors.isEmpty()) {
+      await unlinkAsync(req.file.path)
+      return res.status(400).json({ errors: errors.array() })
+    }
 
+    const body = req.body
+    const blog = await Blog.findById(req.params.blogId).populate('topics')
+
+    if (!blog) {
+      res
+        .status(404)
+        .redirect('/blogs')
+    }
+
+    let validTopic = true;
+
+    // Check topics' existence
+    const allTopics = await Topic.find({})
+    let topics = [];
+
+    for(const blogTopic of body.topics) {
+      const topic = allTopics.find(topic => topic._id.toString() === blogTopic)
+      if (!allTopics.includes(blogTopic) && !topic) {
+        validTopic = false;
+      }
+      topics.push(topic)
+    }
+
+    if (!validTopic) {
+      res
+        .status(400)
+        .json({
+          errors: [
+            {
+              param: 'topic',
+              msg: "Some topic are invalid"
+            }
+          ]
+        })
+      return;
+    }
+
+    // Check topics differences
+    const removeBlogFromTopic = blog.topics.filter(topic => !topics.map(topic => topic.id).includes(topic.id))
+    const addBlogToTopic = topics.filter(topic => !blog.topics.map(topic => topic.id).includes(topic.id))
+
+    // Parse HTML and check if it is valid
+    const parsedContent = parse(body.content)
+
+    if (!valid(parsedContent)) {
+      res
+        .status(400)
+        .json(
+          {
+            errors: [
+              {
+                param: 'content',
+                msg: "Content not valid"
+              }
+            ]
+          }
+        )
+        return
+    }
+    const sanitizedContent = sanitizeHtml(body.content, {
+      allowedTags: [
+        "address", "article", "aside", "footer", "header", "h1", "h2", "h3", "h4",
+        "h5", "h6", "hgroup", "main", "nav", "section", "blockquote", "dd", "div",
+        "dl", "dt", "figcaption", "figure", "hr", "li", "main", "ol", "p", "pre",
+        "ul", "a", "abbr", "b", "bdi", "bdo", "br", "cite", "code", "data", "dfn",
+        "em", "i", "kbd", "mark", "q", "rb", "rp", "rt", "rtc", "ruby", "s", "samp",
+        "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr", "caption",
+        "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "img"
+      ],
+      disallowedTagsMode: 'discard',
+      allowedAttributes: {
+        a: [ 'href', 'name', 'target' ],
+        // We don't currently allow img itself by default, but
+        // these attributes would make sense if we did.
+        img: [ 'src', 'srcset', 'alt', 'title', 'width', 'height', 'loading' ]
+      },
+      // Lots of these won't come up by default because we don't allow them
+      selfClosing: [ 'img', 'br', 'hr', 'area', 'base', 'basefont', 'input', 'link', 'meta' ],
+      // URL schemes we permit
+      allowedSchemes: [ 'http', 'https', 'ftp', 'mailto', 'tel' ],
+      allowedSchemesByTag: {},
+      allowedSchemesAppliedToAttributes: [ 'href', 'src', 'cite' ],
+      allowProtocolRelative: true,
+      enforceHtmlBoundary: false,
+      parseStyleAttributes: true
+    })
+
+    const updatedBlog = await Blog.findByIdAndUpdate(req.params.blogId, {
+      title: body.title,
+      caption: body.caption,
+      content: sanitizedContent,
+      topics: body.topics ? body.topics : [],
+      thumbnail: req.file ? req.file.path : blog.thumbnail
+    })
+
+    // Save and remove topic to and from blogs
+    if (removeBlogFromTopic.length > 0) {
+      const removedTopics = removeBlogFromTopic.map(topic => {
+        const newTopic = topic;
+        topic.blogs.filter(topicBlog => {
+          return blog.id !== topicBlog.toString()
+        })
+        console.log(newTopic)
+        newTopic.blogs = topic.blogs.filter(topicBlog => blog.id !== topicBlog.toString())
+        return newTopic
+      })
+
+      removedTopics.forEach(async (topic) => await topic.save())
+    }
+
+    if (addBlogToTopic.length > 0) {
+      const savedToTopics = addBlogToTopic.map(topic => {
+        topic.blogs.push(blog._id)
+        return topic
+      })
+      console.log(savedToTopics)
+      savedToTopics.forEach(async (topic) => await topic.save())
+    }
+    
+    res.json({
+      updatedBlog
+    })
+    }
+]
 
 // Handle blog deletion functionalities
 exports.BLOG_DELETE = (req, res) => {

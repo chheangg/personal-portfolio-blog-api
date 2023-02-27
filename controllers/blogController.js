@@ -358,13 +358,16 @@ exports.BLOG_EDIT = [
       parseStyleAttributes: true
     })
 
+    console.log(topics)
     const updatedBlog = await Blog.findByIdAndUpdate(req.params.blogId, {
       title: body.title,
       caption: body.caption,
       content: sanitizedContent,
-      topics: body.topics ? body.topics : [],
+      topics: body.topics ? topics : [],
       thumbnail: req.file ? req.file.path : blog.thumbnail
-    })
+    }, { 
+      returnOriginal: false
+    }).populate('topics')
 
     // Save and remove topic to and from blogs
     if (removeBlogFromTopic.length > 0) {
@@ -373,7 +376,6 @@ exports.BLOG_EDIT = [
         topic.blogs.filter(topicBlog => {
           return blog.id !== topicBlog.toString()
         })
-        console.log(newTopic)
         newTopic.blogs = topic.blogs.filter(topicBlog => blog.id !== topicBlog.toString())
         return newTopic
       })
@@ -386,9 +388,10 @@ exports.BLOG_EDIT = [
         topic.blogs.push(blog._id)
         return topic
       })
-      console.log(savedToTopics)
       savedToTopics.forEach(async (topic) => await topic.save())
     }
+
+    console.log(updatedBlog)
     
     res.json({
       updatedBlog

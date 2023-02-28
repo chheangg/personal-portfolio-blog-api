@@ -55,9 +55,9 @@ exports.TOPIC_DETAIL = async (req, res) => {
     })
     return
   }
-  res.json(
+  res.json({
     topic
-  )
+  })
 }
 
 exports.TOPIC_EDIT = [

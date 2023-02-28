@@ -49,12 +49,14 @@ exports.TOPIC_DETAIL = async (req, res) => {
         path: 'author'
       }
     })
+
   if (!topic) {
     res.status(404).json({
       error: "Topic doesn't exist"
     })
     return
   }
+  
   res.json({
     topic
   })

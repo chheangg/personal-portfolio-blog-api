@@ -60,9 +60,45 @@ exports.TOPIC_DETAIL = async (req, res) => {
   )
 }
 
-exports.TOPIC_EDIT = (req, res) => {
-  res.json(`ROUTE NOT IMPLEMENTED: TOPIC_EDIT ${req.params.topicId}`)
-}
+exports.TOPIC_EDIT = [
+  body('name')
+    .trim()
+    .escape()
+    .notEmpty().withMessage('Topic name must not be empty'),
+  async (req, res) => {
+    const errors = validationResult(req)
+    
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const body = req.body
+
+    // Check if Topic exists
+    const topic = await Topic.findById(req.params.topicId)
+
+    if (!topic) {
+      return res
+        .status(404)
+        .json({ error: "Topic isn't found" })
+    }
+
+    // Check if there is a topic by the same name
+    const sameTopic = await Topic.findOne({ name: body.name })
+
+    if (sameTopic) {
+      return res.status(400).json({ error: "Topic name already taken" })
+    }
+
+    topic.name = body.name
+
+    await topic.save()
+
+    res.json({
+      topic
+    })
+  }
+]
 
 exports.TOPIC_DELETE = (req, res) => {
   res.json(`ROUTE NOT IMPLEMENTED: TOPIC_DELETE ${req.params.topicId}`)

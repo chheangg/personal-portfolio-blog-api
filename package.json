@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build:ui": "rm -rf build && cd ../personal-portfolio && npm run build && cp -r build ../personal-portfolio-blog-api",
+    "build:ui": "rm -rf build admin && cd ../personal-portfolio && npm run build && cp -r build ../personal-portfolio-blog-api && cd ../personal-portfolio-admin && npm run build && rm -rf admin && mv build admin && cp -r admin ../personal-portfolio-blog-api",
     "dev": "nodemon ./bin/www",
     "start": "node ./bin/www"
   },
@@ -12,12 +12,12 @@
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^16.0.3",
+    "ejs": "^3.1.8",
     "express": "~4.16.1",
     "express-async-errors": "^3.1.1",
     "express-validator": "^6.14.3",
     "http-errors": "~1.6.3",
     "install": "^0.13.0",
-    "jade": "~1.11.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.9.0",
     "morgan": "~1.9.1",
@@ -26,6 +26,9 @@
     "node-html-parser": "^6.1.5",
     "nodemon": "^2.0.20",
     "npm": "^9.4.0",
+    "passport": "^0.6.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
     "sanitize-html": "^2.10.0",
     "uuid": "^9.0.0"
   },

@@ -42,6 +42,46 @@ exports.AUTHOR_CREATE = [
   } 
 ]
 
+// Handle the creation of an admin author
+exports.AUTHOR_ADMIN_CREATE = [
+  body('username')
+    .trim()
+    .escape()
+    .isEmail().withMessage('username must be email')
+    .normalizeEmail(),
+  body('name')
+    .trim()
+    .escape()
+    .isLength({ min: 3 }).withMessage('name must be at least 3 characters long')
+    .isLength({ max: 16 }).withMessage('name must be at most 16 characters long'),
+  body('password')
+    .trim()
+    .escape()
+    .isLength({ min: 3, max: 256 }).withMessage('password must be at least 3 characters long'),
+  async (req, res) => {
+    const errors = validationResult(req)
+    
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(req.body.password, saltRounds);
+    console.log(passwordHash)
+    const body = {
+      username: req.body.username,
+      name: req.body.name,
+      passwordHash,
+      blogs: req.body.blogs ? req.body.blogs : [],
+      isAdmin: true,
+    }
+    
+    const author = new Author(body)
+    await author.save()
+    res.redirect('/admin')
+  } 
+]
+
 // Display the author's detail
 exports.AUTHOR_DETAIL = async (req, res) => {
   const author = await Author

@@ -6,6 +6,7 @@ const AuthorSchema = new Schema({
   name: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true, select: false },
   blogs: [{ type: Schema.Types.ObjectId, ref: 'Blog' }],
+  isAdmin: { type: Boolean, default: false},
 })
 
 // Book's URL

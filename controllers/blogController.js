@@ -5,6 +5,8 @@ const { v4: uuidv4 } = require('uuid');
 const multer  = require('multer')
 const path = require('path')
 const fs = require('fs')
+const { loginHandler } = require('../utilities/middleware')
+
 const { promisify } = require('util')
 
 const unlinkAsync = promisify(fs.unlink)
@@ -55,6 +57,7 @@ const Reply = require('../models/reply')
 
 // Upload image
 exports.UPLOAD_IMAGE = [
+  loginHandler,
   upload.single('image'),
   (req, res) => {
     res.json({
@@ -76,6 +79,7 @@ exports.BLOG_LIST = async (req, res) => {
 
 // Handle blog creation functionalities
 exports.BLOG_CREATE = [
+  loginHandler,
   upload.single('thumbnail'),
   (req, res, next) => {
     req.body.topics = req.body.topics ? [...req.body.topics.split(',')] : []
@@ -109,7 +113,7 @@ exports.BLOG_CREATE = [
     const body = req.body
 
     // Check author's existence
-    const author = await Author.findById(body.author)
+    const author = await Author.findById(req.user._id)
     if (!author) {
       res
         .status(400)
@@ -172,6 +176,7 @@ exports.BLOG_CREATE = [
         )
         return
     }
+
     const sanitizedContent = sanitizeHtml(body.content, {
       allowedTags: [
         "address", "article", "aside", "footer", "header", "h1", "h2", "h3", "h4",
@@ -199,6 +204,7 @@ exports.BLOG_CREATE = [
       enforceHtmlBoundary: false,
       parseStyleAttributes: true
     })
+
     const blog = new Blog({
       title: body.title,
       caption: body.caption,
@@ -208,7 +214,7 @@ exports.BLOG_CREATE = [
       topics: body.topics ? body.topics : [],
       thumbnail: req.file ? req.file.path : ''
     })
-
+    
     // Save blog to each topic document
     const savedTopics = topics.map(topic => {
       topic.blogs.push(blog._id)
@@ -241,6 +247,7 @@ exports.BLOG_DETAIL = async (req, res) => {
 
 // Handle blog editing functionalities
 exports.BLOG_EDIT = [
+  loginHandler,
   upload.single('thumbnail'),
   (req, res, next) => {
     req.body.topics = req.body.topics ? [...req.body.topics.split(',')] : []
@@ -445,18 +452,18 @@ exports.COMMENT_CREATE = [
     const blog = await Blog.findById(req.params.blogId)
 
     let author
-    if (body.author) {
-      author = await Author.findById(body.author)
+    if (req.user) {
+      author = await Author.findById(req.user.username)
     }
     
-    if (!blog || (body.author && !author)) {
+    if (!blog || (req.user && !author)) {
       res.status(400).json({
         error: 'Either blog or author doesn\'t exist'
       })
     }
 
     let comment
-    if (body.author) {
+    if (req.user) {
       comment = new Comment({
         blog: blog._id,
         author: author,
@@ -525,18 +532,18 @@ exports.REPLY_CREATE = [
     const comment = await Comment.findById(req.params.commentId)
 
     let author
-    if (body.author) {
-      author = await Author.findById(body.author)
+    if (req.user) {
+      author = await Author.findById(req.user.username)
     }
     
-    if (!comment || (body.author && !author)) {
+    if (!comment || (req.user && !author)) {
       res.status(400).json({
         error: 'Either blog or author doesn\'t exist'
       })
     }
 
     let reply
-    if (body.author) {
+    if (req.user) {
       reply = new Reply({
         comment: comment._id,
         author: author,

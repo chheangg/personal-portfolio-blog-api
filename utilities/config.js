@@ -6,6 +6,7 @@ nconf.argv().env()
 
 const NODE_ENV = nconf.get('NODE_ENV');
 const PORT = nconf.get('PORT');
+const JWT_SECRET = nconf.get('JWT_SECRET')
 const MONGODB_URI = NODE_ENV === 'production'
                                   ?
                                   nconf.get('MONGODB_URI')
@@ -16,4 +17,4 @@ const MONGODB_URI = NODE_ENV === 'production'
                                     :
                                     'mongodb://localhost:27017/BLOG_DB_TEST';
 
-module.exports = { NODE_ENV, PORT, MONGODB_URI };
+module.exports = { NODE_ENV, PORT, MONGODB_URI, JWT_SECRET };

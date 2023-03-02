@@ -1,8 +1,10 @@
 const Topic = require('../models/topic')
 const Blog = require('../models/blog')
 const { body, validationResult } = require('express-validator')
+const { loginHandler } = require('../utilities/middleware');
 
 exports.TOPIC_LIST = async (req, res) => {
+  console.log('hey')
   const topics = await Topic.find({})
   res.json({
     topics
@@ -10,6 +12,7 @@ exports.TOPIC_LIST = async (req, res) => {
 }
 
 exports.TOPIC_CREATE = [
+  loginHandler,
   body('name')
     .trim()
     .escape()
@@ -63,6 +66,7 @@ exports.TOPIC_DETAIL = async (req, res) => {
 }
 
 exports.TOPIC_EDIT = [
+  loginHandler,
   body('name')
     .trim()
     .escape()

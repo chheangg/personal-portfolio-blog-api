@@ -25,7 +25,7 @@ router.post(
       }
 
       req.login(sanitizedAuthor, { session: false }, (err) => {
-        const token = jwt.sign(tokenObject, JWT_SECRET)
+        const token = jwt.sign(tokenObject, JWT_SECRET, { expiresIn: "60 days"})
         res.json({ user: sanitizedAuthor, token })
       })
 

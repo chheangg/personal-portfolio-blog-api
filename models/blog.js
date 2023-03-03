@@ -10,6 +10,7 @@ const BlogSchema = new Schema({
   topics: [{ type: Schema.Types.ObjectId, required: true, ref: "Topic" }],
   timestamp: { type: Date, default: Date.now },
   content: { type: String, required: true },
+  isPublished: { type: Boolean, default: false },
   comments: [{ type: Schema.Types.ObjectId, required: true, ref: "Comment" }],
 })
 

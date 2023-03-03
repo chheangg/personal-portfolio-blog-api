@@ -249,9 +249,15 @@ exports.BLOG_DETAIL = async (req, res) => {
     .populate('topics', { blogs: 0})
     .populate('comments', { blog: 0 })
     .populate('author', { blogs: 0, username: 0, passwordHash: 0 })
+
+  if (!blog.isPublished) {
+    res.status(401).json({ error: "Access Unauthorized" })
+    return
+  }
     
   if (!blog) {
     res.status(404).json({ error: `Blog ${req.params.blogId} not found` })
+    return
   }
   res.json({
     blog

@@ -12,6 +12,7 @@ const initializeHandler = async (req, res, next) => {
 
 const loginHandler = (req, res, next) => {
   passport.authenticate('jwt', (error, user, info) => {
+    console.log(user)
     if (!user) {
       res.status(401).json({
         error: "Access Unauthorized"

@@ -68,7 +68,7 @@ exports.UPLOAD_IMAGE = [
 
 // Display a list of blogs
 exports.BLOG_LIST = async (req, res) => {
-  const blogs = await Blog.find({}, { sections: 0 })
+  const blogs = await Blog.find({ isPublished: true }, { sections: 0 })
     .populate('topics', { blogs: 0})
     .populate('author', { blogs: 0, username: 0, passwordHash: 0 })
   
@@ -76,6 +76,19 @@ exports.BLOG_LIST = async (req, res) => {
     blogs
   })
 }
+
+exports.BLOG_ADMIN_LIST = [
+  loginHandler,
+  async (req, res) => {
+    const blogs = await Blog.find({}, { sections: 0 })
+      .populate('topics', { blogs: 0})
+      .populate('author', { blogs: 0, username: 0, passwordHash: 0 })
+    
+    res.json({
+      blogs
+    })
+  }
+]
 
 // Handle blog creation functionalities
 exports.BLOG_CREATE = [
@@ -365,13 +378,13 @@ exports.BLOG_EDIT = [
       parseStyleAttributes: true
     })
 
-    console.log(topics)
     const updatedBlog = await Blog.findByIdAndUpdate(req.params.blogId, {
       title: body.title,
       caption: body.caption,
       content: sanitizedContent,
       topics: body.topics ? topics : [],
-      thumbnail: req.file ? req.file.path : blog.thumbnail
+      thumbnail: req.file ? req.file.path : blog.thumbnail,
+      isPublished: body.isPublished
     }, { 
       returnOriginal: false
     }).populate('topics')

@@ -5,8 +5,11 @@ const blogController = require('../controllers/blogController')
 // POST request for uploading images
 router.post('/upload', blogController.UPLOAD_IMAGE)
 
-// GET request for all blogs
+// GET request for all Published blogs
 router.get('/', blogController.BLOG_LIST)
+
+// GET request for all blogs
+router.get('/admin', blogController.BLOG_ADMIN_LIST)
 
 // POST request for creating a blog
 router.post('/', blogController.BLOG_CREATE)

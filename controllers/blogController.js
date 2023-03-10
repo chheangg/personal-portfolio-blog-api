@@ -54,6 +54,9 @@ const Topic = require('../models/topic')
 const Comment = require('../models/comment')
 const Reply = require('../models/reply')
 
+const isDate = function(date) {
+  return (new Date(date) !== "Invalid Date") && !isNaN(new Date(date));
+}
 
 // Upload image
 exports.UPLOAD_IMAGE = [
@@ -68,10 +71,23 @@ exports.UPLOAD_IMAGE = [
 
 // Display a list of blogs
 exports.BLOG_LIST = async (req, res) => {
-  const blogs = await Blog.find({ isPublished: true }, { sections: 0 })
+  const query = req.query;
+
+  if (!query || !isDate(query.time)) {
+    res.status(400).json({
+      error: "Invalid date"
+    })
+    return
+  }
+
+  const time = new Date(query.time);
+
+  const blogs = await Blog
+    .find({ isPublished: true, timestamp: { $lt: time ? time : Date.now() } }, { sections: 0 })
+    .limit(8)
+    .sort('-timestamp')
     .populate('topics', { blogs: 0})
     .populate('author', { blogs: 0, username: 0, passwordHash: 0 })
-  
   res.json({
     blogs
   })
